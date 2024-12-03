@@ -28,14 +28,16 @@ jobs:
           docker tag swiggy mohan08129/swiggy:latest
           docker login -u ${{ secret.DOCKER_USERNAME }} -p {{ secret.DOCKER_TOKEN }}
           docker push mohan08129/swiggy:latest
-      - name: trivy scan image
-        run: trivy image mohan08129/swiggy:latest   
+        env:
+          DOCKER_CLI_ACL: 1  
   deploy:
+    name: deploy app to docker
     needs: build analyze-scan   
     runs-on: [self-hosted]    
     steps:
       - name: docker pull
         run: docker pull mohan08129/swiggy:latest
       - name: image scan
-        run: trivy image mohan08129/swiggy:latest
-      - name: docker run -itd -p 3000:3000 --name swiggy mohan08129/swiggy:latest
+        run: trivy image mohan08129/swiggy:latest > image-trivy-scan.txt
+      - name: run docker container
+        run: docker run -itd -p 3000:3000 --name swiggy mohan08129/swiggy:latest
